@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useRef, useState } from "react"
+import React, { useRef, useState} from "react"
 import List from "../components/list"
 
-let initItems: {id: number, title: string, cards:string[]}[] = [
-  {id: 0, title: 'left', cards: ['red', 'orange']},
-  {id: 1, title: 'center', cards: ['yellow', 'green']},
-  {id: 2, title: 'right', cards: ['blue', 'indigo', 'violet']}
+let initItems: {id: number, title: string, cards:{id: number, title: string}[]}[] = [
+  {id: 0, title: 'left', cards: [{id:0, title:'red'}, {id:1, title:'orange'}]},
+  {id: 1, title: 'center', cards: [{id:2, title:'yellow'}, {id:3, title:'green'}]},
+  {id: 2, title: 'right', cards: [{id:4, title:'blue'}, {id:5, title:'indigo'}, {id:6, title:'violet'}]}
 ];
 
 export default function Home() {
@@ -14,8 +14,8 @@ export default function Home() {
   const [items, setItems] = useState(initItems);
   const [title, setTitle] = useState('');
 
-  const cardId = useRef(0);
-
+  const cardId = useRef(6);
+  
   function addList() {
     setId(id + 1);
     setItems([...items, {id: id, title: title, cards:[]}]);
@@ -36,20 +36,30 @@ export default function Home() {
 
   function generateCardId(): number {
     cardId.current = cardId.current + 1;
-console.log('generateCardId', cardId.current);    
+    
     return cardId.current;
+  }
+
+  function insertCard(card: {id: number, title: string}, listIndex: number, cardIndex:number): void {
+    const list = items[listIndex];
+    const newList = {...list};
+
+    newList.cards.splice(cardIndex, 0, card);
+
+    const newItems = [...items];
+    newItems.splice(listIndex, 1, newList);
+    setItems(newItems);
   }
 
   return (
       <div className="kanban">
         { items.map((item) => <List 
           key={item.id}
-          title={item.title}
-          id={item.id}
-          cards={item.cards}
+          item = {item}
           removeList={removeList}
           orderList={orderList}
           generateCardId={generateCardId}
+          insertCard={insertCard}
         />) }
         <div className="adder">
           <input name="title" value={title} onChange={e => setTitle(e.target.value)} />

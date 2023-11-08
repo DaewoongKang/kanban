@@ -4,40 +4,68 @@ import Card from "./card";
 
 const initItems: {id: number, title: string}[] = [
 ];
-export default function List(props: {id:number, title: string, cards:string[], removeList: Function, orderList: Function, generateCardId: Function}) {
-    const [title, setTitle] = useState(props.title);
+export default function List(props: {item:{id: number, title: string, cards:{id: number, title: string}[]}, 
+        removeList: Function, orderList: Function, generateCardId: Function, insertCard: Function}) {
+    const [title, setTitle] = useState(props.item.title);
     const [items, setItems] = useState(initItems);
 
     useEffect(() => {
-        const newItems = [...items];
-        props.cards.forEach((card) => newItems.push({id: props.generateCardId(), title: card}));
+        const newItems = [...initItems];
+        props.item.cards.forEach((card) => newItems.push({id: card.id, title: card.title}));
         setItems(newItems);
-    }, [props.cards]);
+    }, [props.item]);
 
     function addCard(cardTitle: string): void {
         const id = props.generateCardId();
-        setItems([...items, {id: id, title: cardTitle + id}]);
+
+        const newItems = [...items, {id: id, title: cardTitle + id}];
+        setItems(newItems);
+        props.item.cards = [...newItems];
     }
     
     function removeCard(id: number): void {
         const newItems = items.filter((item) => item.id !== id);
         setItems(newItems);
+        props.item.cards = [...newItems];
     }
 
-    function moveCard(e: DragEvent<HTMLElement>, id: number): void {
-        const dragItem = e.target as HTMLElement;
-        const card = Array.from(items).find((item) => item.id === id);
+    function moveCard(x: number, y:number, card: {id: number, title: string}): void {
+        const dropPos = findDropPos(x, y);
+        if (dropPos == null)
+            return;
 
-        console.log('moveCard', id, card);
-        //const dragListIndex = findListIndex(e.clientX);
-
-        //removeCard(id);
+        removeCard(card.id);
+        props.insertCard(card, dropPos.listIndex, dropPos.cardIndex);    
     }
 
-    
+    type Nullable<T> = T | null;
 
-    function findListIndex(x: number): number {
-        return 0;
+    function findDropPos(x: number, y: number): Nullable<{ listIndex:number, cardIndex: number}>  {
+        const lists  = document.getElementsByClassName("list")  as HTMLCollectionOf<HTMLElement>;
+        
+        for (let i = 0; i < lists.length; i++) {
+            const list = lists[i];
+            if (x >= list.offsetLeft && x <= list.offsetLeft + list.offsetWidth) {
+                return {listIndex: i, cardIndex: findCardPos(list, y)};
+            }
+        }
+
+        return null;
+    }
+
+    function findCardPos(list: HTMLElement, y: number): number {
+        const cards = list.getElementsByClassName("card")  as HTMLCollectionOf<HTMLElement>;
+        let i = 0; //after item
+        while (i < cards.length) {
+            const card = cards[i];
+            const centerY = card.offsetTop + card.offsetHeight / 2;
+            if (y < centerY) {
+                return i;
+            }
+            i++;
+        }
+
+        return i;
     }
     
     
@@ -74,13 +102,15 @@ export default function List(props: {id:number, title: string, cards:string[], r
             onDragEnd={dragEnd}
             onDragOver={e => e.preventDefault()}
         >
-            <input value={title} className="title"  onChange={e => setTitle(e.target.value)} />
-            <button className="remove" onClick={()=>props.removeList(props.id)}>-</button>
+            <input value={title} className="title"  onChange={e => {
+                setTitle(e.target.value);
+                props.item.title = e.target.value;
+            }} />
+            <button className="remove" onClick={()=>props.removeList(props.item.id)}>-</button>
             <br/>
             { items.map((item) => <Card 
                 key={item.id} 
-                id={item.id} 
-                title={item.title} 
+                item={item} 
                 removeCard={removeCard}
                 moveCard={moveCard}
             />) }
