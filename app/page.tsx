@@ -2,6 +2,17 @@
 
 import React, { useRef, useState} from "react"
 import List from "../components/list"
+//import {read} from "../lib/file.js"
+
+/*
+Home.getInitialProps = async () => {
+  const data = await read();
+  const items = JSON.parse(data);
+
+  console.log(items);
+  return { items }
+}
+*/
 
 let initItems: {id: number, title: string, cards:{id: number, title: string}[]}[] = [
   {id: 0, title: 'left', cards: [{id:0, title:'red'}, {id:1, title:'orange'}]},
@@ -9,7 +20,7 @@ let initItems: {id: number, title: string, cards:{id: number, title: string}[]}[
   {id: 2, title: 'right', cards: [{id:4, title:'blue'}, {id:5, title:'indigo'}, {id:6, title:'violet'}]}
 ];
 
-export default function Home() {
+export default function Home(xx: {items: {id: number, title: string, cards:{id: number, title: string}[]}[]}) {
   const [id, setId] = useState(initItems.length)
   const [items, setItems] = useState(initItems);
   const [title, setTitle] = useState('');
