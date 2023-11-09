@@ -1,0 +1,5 @@
+[
+    {"id": 0, "title": "left", "cards": [{"id":0, "title":"red"}, {"id":1, "title":"orange"}]},
+    {"id": 1, "title": "center", "cards": [{"id":2, "title":"yellow"}, {"id":3, "title":"green"}]},
+    {"id": 2, "title": "right", "cards": [{"id":4, "title":"blue"}, {"id":5, "title":"indigo"}, {"id":6, "title":"violet"}]}
+]
