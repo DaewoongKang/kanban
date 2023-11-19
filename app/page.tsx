@@ -1,35 +1,66 @@
 'use client'
 
-import React, { useRef, useState} from "react"
+import React, { useRef, useState, useEffect} from "react"
 import List from "../components/list"
-//import {read} from "../lib/file.js"
 
-/*
-Home.getInitialProps = async () => {
-  const data = await read();
-  const items = JSON.parse(data);
+type CardType = {
+  id: number, 
+  title: string
+};  
 
-  console.log(items);
-  return { items }
+type ListType = {
+  id: number, 
+  title: string, 
+  cards:CardType[],
+};
+
+type BoardType = {
+  lists: ListType[],
+  maxListId: number,
+  maxCardId: number
 }
-*/
 
-let initItems: {id: number, title: string, cards:{id: number, title: string}[]}[] = [
-  {id: 0, title: 'left', cards: [{id:0, title:'red'}, {id:1, title:'orange'}]},
-  {id: 1, title: 'center', cards: [{id:2, title:'yellow'}, {id:3, title:'green'}]},
-  {id: 2, title: 'right', cards: [{id:4, title:'blue'}, {id:5, title:'indigo'}, {id:6, title:'violet'}]}
-];
 
-export default function Home(xx: {items: {id: number, title: string, cards:{id: number, title: string}[]}[]}) {
-  const [id, setId] = useState(initItems.length)
-  const [items, setItems] = useState(initItems);
+export default function Home() {
+  const [items, setItems] = useState([] as ListType[]);
   const [title, setTitle] = useState('');
+  const maxCardId = useRef(0);
+  const maxListId = useRef(0);
 
-  const cardId = useRef(6);
+
+  useEffect(() =>  {
+    fetch('api/').then(res => res.json()).then((json:BoardType) => {
+      setItems(json.lists)
+      maxListId.current = json.maxListId
+      maxCardId.current = json.maxCardId
+    })
+  },[]);
+
+  useEffect(() =>  {
+    if (items.length == 0)
+      return;
+
+    console.log('fetch post', items, maxListId.current, maxCardId.current)  
+
+    fetch('api/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({lists: items, maxListId: maxListId.current, maxCardId: maxCardId.current}),
+    });  
+  },[items]);
+
+  useEffect(() =>  {
+    const source = new EventSource('/api?sse');
+    source.onmessage = function(event) {
+      console.log('sse client', event.data);
+    };
+  },[]);
+
   
   function addList() {
-    setId(id + 1);
-    setItems([...items, {id: id, title: title, cards:[]}]);
+    setItems([...items, {id: ++maxListId.current, title: title, cards:[]}]);
     setTitle('');
   }
   
@@ -46,9 +77,7 @@ export default function Home(xx: {items: {id: number, title: string, cards:{id: 
   }
 
   function generateCardId(): number {
-    cardId.current = cardId.current + 1;
-    
-    return cardId.current;
+    return ++maxCardId.current;
   }
 
   function insertCard(card: {id: number, title: string}, listIndex: number, cardIndex:number): void {
@@ -60,6 +89,8 @@ export default function Home(xx: {items: {id: number, title: string, cards:{id: 
     const newItems = [...items];
     newItems.splice(listIndex, 1, newList);
     setItems(newItems);
+
+    console.log('insertCard', newItems)
   }
 
   return (

@@ -2,8 +2,7 @@ import { useState, useEffect } from "react"
 import { DragEvent } from "react"
 import Card from "./card";
 
-const initItems: {id: number, title: string}[] = [
-];
+const initItems: {id: number, title: string}[] = [];
 export default function List(props: {item:{id: number, title: string, cards:{id: number, title: string}[]}, 
         removeList: Function, orderList: Function, generateCardId: Function, insertCard: Function}) {
     const [title, setTitle] = useState(props.item.title);

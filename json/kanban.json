@@ -1,5 +1,1 @@
-[
-    {"id": 0, "title": "left", "cards": [{"id":0, "title":"red"}, {"id":1, "title":"orange"}]},
-    {"id": 1, "title": "center", "cards": [{"id":2, "title":"yellow"}, {"id":3, "title":"green"}]},
-    {"id": 2, "title": "right", "cards": [{"id":4, "title":"blue"}, {"id":5, "title":"indigo"}, {"id":6, "title":"violet"}]}
-]
+{"lists":[{"id":0,"title":"left","cards":[{"id":0,"title":"red"},{"id":1,"title":"orange"}]},{"id":1,"title":"center","cards":[{"id":2,"title":"yellow"},{"id":3,"title":"green"},{"id":17,"title":"17"},{"id":5,"title":"indigo"}]},{"id":2,"title":"right","cards":[{"id":4,"title":"blue"},{"id":6,"title":"violet"},{"id":18,"title":"18"},{"id":19,"title":"19"}]},{"id":11,"title":"aa","cards":[]}],"maxListId":11,"maxCardId":19}
