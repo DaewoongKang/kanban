@@ -2,27 +2,11 @@
 
 import React, { useRef, useState, useEffect} from "react"
 import List from "../components/list"
-
-type CardType = {
-  id: number, 
-  title: string
-};  
-
-type ListType = {
-  id: number, 
-  title: string, 
-  cards:CardType[],
-};
-
-type BoardType = {
-  lists: ListType[],
-  maxListId: number,
-  maxCardId: number
-}
+import type {CardType, ListType, BoardType} from "../components/type"
 
 
 export default function Home() {
-  const [items, setItems] = useState([] as ListType[]);
+  const [lists, setLists] = useState([] as ListType[]);
   const [title, setTitle] = useState('');
   const maxCardId = useRef(0);
   const maxListId = useRef(0);
@@ -30,26 +14,26 @@ export default function Home() {
 
   useEffect(() =>  {
     fetch('api/').then(res => res.json()).then((json:BoardType) => {
-      setItems(json.lists)
+      setLists(json.lists)
       maxListId.current = json.maxListId
       maxCardId.current = json.maxCardId
     })
   },[]);
 
   useEffect(() =>  {
-    if (items.length == 0)
+    if (lists.length == 0)
       return;
 
-    console.log('fetch post', items, maxListId.current, maxCardId.current)  
+    console.log('fetch post', lists, maxListId.current, maxCardId.current)  
 
     fetch('api/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({lists: items, maxListId: maxListId.current, maxCardId: maxCardId.current}),
+      body: JSON.stringify({lists: lists, maxListId: maxListId.current, maxCardId: maxCardId.current}),
     });  
-  },[items]);
+  },[lists]);
 
   useEffect(() =>  {
     const source = new EventSource('/api?sse');
@@ -60,44 +44,44 @@ export default function Home() {
 
   
   function addList() {
-    setItems([...items, {id: ++maxListId.current, title: title, cards:[]}]);
+    setLists([...lists, {id: ++maxListId.current, title: title, cards:[]}]);
     setTitle('');
   }
   
   function removeList(id: number) {
-    const newItems = items.filter((item) => item.id !== id);
-    setItems(newItems);
+    const newLists = lists.filter((list) => list.id !== id);
+    setLists(newLists);
   }
 
   function orderList(from: number, to: number) {
-    const newItems = items.slice();
-    const item = newItems.splice(from, 1)[0];
-    newItems.splice(to, 0, item);
-    setItems(newItems);
+    const newLists = lists.slice();
+    const list = newLists.splice(from, 1)[0];
+    newLists.splice(to, 0, list);
+    setLists(newLists);
   }
 
   function generateCardId(): number {
     return ++maxCardId.current;
   }
 
-  function insertCard(card: {id: number, title: string}, listIndex: number, cardIndex:number): void {
-    const list = items[listIndex];
+  function insertCard(card: CardType, listIndex: number, cardIndex:number): void {
+    const list = lists[listIndex];
     const newList = {...list};
 
     newList.cards.splice(cardIndex, 0, card);
 
-    const newItems = [...items];
-    newItems.splice(listIndex, 1, newList);
-    setItems(newItems);
+    const newLists = [...lists];
+    newLists.splice(listIndex, 1, newList);
+    setLists(newLists);
 
-    console.log('insertCard', newItems)
+    console.log('insertCard', newLists)
   }
 
   return (
       <div className="kanban">
-        { items.map((item) => <List 
-          key={item.id}
-          item = {item}
+        { lists.map((list) => <List 
+          key={list.id}
+          list = {list}
           removeList={removeList}
           orderList={orderList}
           generateCardId={generateCardId}

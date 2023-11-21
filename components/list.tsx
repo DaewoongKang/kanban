@@ -1,31 +1,38 @@
 import { useState, useEffect } from "react"
 import { DragEvent } from "react"
 import Card from "./card";
+import type {CardType, ListType} from "../components/type"
 
-const initItems: {id: number, title: string}[] = [];
-export default function List(props: {item:{id: number, title: string, cards:{id: number, title: string}[]}, 
+export default function List(props: {list:ListType, 
         removeList: Function, orderList: Function, generateCardId: Function, insertCard: Function}) {
-    const [title, setTitle] = useState(props.item.title);
-    const [items, setItems] = useState(initItems);
+    const [title, setTitle] = useState(props.list.title);
+    const [cards, setCards] = useState([] as CardType[]);
 
     useEffect(() => {
-        const newItems = [...initItems];
-        props.item.cards.forEach((card) => newItems.push({id: card.id, title: card.title}));
-        setItems(newItems);
-    }, [props.item]);
+        const newCards: CardType[] = [];
+        props.list.cards.forEach((card) => newCards.push({id: card.id, title: card.title}));
+        setCards(newCards);
+        setTitle(props.list.title);
+
+        console.log('list changed', props.list.id);
+    }, [props.list]);
+
+    useEffect(() => {
+        console.log('card changed', props.list.id);
+    }, [title, cards]);
 
     function addCard(cardTitle: string): void {
         const id = props.generateCardId();
 
-        const newItems = [...items, {id: id, title: cardTitle + id}];
-        setItems(newItems);
-        props.item.cards = [...newItems];
+        const newCards = [...cards, {id: id, title: cardTitle + id}];
+        setCards(newCards);
+        props.list.cards = [...newCards];
     }
     
     function removeCard(id: number): void {
-        const newItems = items.filter((item) => item.id !== id);
-        setItems(newItems);
-        props.item.cards = [...newItems];
+        const newCards = cards.filter((card) => card.id !== id);
+        setCards(newCards);
+        props.list.cards = [...newCards];
     }
 
     function moveCard(x: number, y:number, card: {id: number, title: string}): void {
@@ -103,13 +110,13 @@ export default function List(props: {item:{id: number, title: string, cards:{id:
         >
             <input value={title} className="title"  onChange={e => {
                 setTitle(e.target.value);
-                props.item.title = e.target.value;
+                props.list.title = e.target.value;
             }} />
-            <button className="remove" onClick={()=>props.removeList(props.item.id)}>-</button>
+            <button className="remove" onClick={()=>props.removeList(props.list.id)}>-</button>
             <br/>
-            { items.map((item) => <Card 
+            { cards.map((item) => <Card 
                 key={item.id} 
-                item={item} 
+                card={item} 
                 removeCard={removeCard}
                 moveCard={moveCard}
             />) }
