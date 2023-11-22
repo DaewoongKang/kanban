@@ -20,44 +20,61 @@ export default function Home() {
     })
   },[]);
 
-  useEffect(() =>  {
+  function save(newLists: ListType[]) {
     if (lists.length == 0)
       return;
 
-    console.log('fetch post', lists, maxListId.current, maxCardId.current)  
+    console.log('fetch post', newLists, maxListId.current, maxCardId.current)  
 
     fetch('api/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({lists: lists, maxListId: maxListId.current, maxCardId: maxCardId.current}),
+      body: JSON.stringify({lists: newLists, maxListId: maxListId.current, maxCardId: maxCardId.current}),
     });  
-  },[lists]);
+  };
 
   useEffect(() =>  {
     const source = new EventSource('/api?sse');
     source.onmessage = function(event) {
-      console.log('sse client', event.data);
+      const board: BoardType = JSON.parse(event.data);
+      
+      setLists(board.lists);
+      maxListId.current = board.maxListId;
+      maxCardId.current = board.maxCardId;
+
     };
   },[]);
 
   
   function addList() {
-    setLists([...lists, {id: ++maxListId.current, title: title, cards:[]}]);
+    const newLists = [...lists, {id: ++maxListId.current, title: title, cards:[]}];
     setTitle('');
+    save(newLists);
   }
   
   function removeList(id: number) {
     const newLists = lists.filter((list) => list.id !== id);
-    setLists(newLists);
+    save(newLists);
   }
 
-  function orderList(from: number, to: number) {
+  function updateList(list: ListType) {
+    const newLists: ListType[] = [];
+    lists.forEach((l) => {
+      if (l.id === list.id) 
+        newLists.push(list);
+      else
+        newLists.push(l);
+    });
+    save(newLists);
+  }
+
+  function moveList(from: number, to: number) {
     const newLists = lists.slice();
     const list = newLists.splice(from, 1)[0];
     newLists.splice(to, 0, list);
-    setLists(newLists);
+    save(newLists);
   }
 
   function generateCardId(): number {
@@ -72,9 +89,7 @@ export default function Home() {
 
     const newLists = [...lists];
     newLists.splice(listIndex, 1, newList);
-    setLists(newLists);
-
-    console.log('insertCard', newLists)
+    save(newLists);
   }
 
   return (
@@ -83,7 +98,8 @@ export default function Home() {
           key={list.id}
           list = {list}
           removeList={removeList}
-          orderList={orderList}
+          updateList={updateList}
+          moveList={moveList}
           generateCardId={generateCardId}
           insertCard={insertCard}
         />) }

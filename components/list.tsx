@@ -4,44 +4,49 @@ import Card from "./card";
 import type {CardType, ListType} from "../components/type"
 
 export default function List(props: {list:ListType, 
-        removeList: Function, orderList: Function, generateCardId: Function, insertCard: Function}) {
+        removeList: Function, updateList: Function, moveList: Function, generateCardId: Function, insertCard: Function}) {
     const [title, setTitle] = useState(props.list.title);
     const [cards, setCards] = useState([] as CardType[]);
 
     useEffect(() => {
-        const newCards: CardType[] = [];
-        props.list.cards.forEach((card) => newCards.push({id: card.id, title: card.title}));
-        setCards(newCards);
+        setCards(props.list.cards);
         setTitle(props.list.title);
 
-        console.log('list changed', props.list.id);
     }, [props.list]);
-
-    useEffect(() => {
-        console.log('card changed', props.list.id);
-    }, [title, cards]);
 
     function addCard(cardTitle: string): void {
         const id = props.generateCardId();
 
         const newCards = [...cards, {id: id, title: cardTitle + id}];
-        setCards(newCards);
-        props.list.cards = [...newCards];
+        props.updateList({id:props.list.id, title: title, cards: newCards});
     }
     
     function removeCard(id: number): void {
-        const newCards = cards.filter((card) => card.id !== id);
-        setCards(newCards);
-        props.list.cards = [...newCards];
+        const newCards = cards.filter((card) => card.id != id);
+        props.updateList({id:props.list.id, title: title, cards: newCards});
     }
 
-    function moveCard(x: number, y:number, card: {id: number, title: string}): void {
+    function updateCard(newCard: CardType): void {
+        const newCards: CardType[] = [];
+        cards.forEach((card) => {
+            if (card.id == newCard.id) 
+                newCards.push(newCard);
+            else
+                newCards.push(card);
+        });
+        props.updateList({id:props.list.id, title: title, cards: newCards});
+    }
+
+    function moveCard(x: number, y:number, moveCard: CardType): void {
         const dropPos = findDropPos(x, y);
         if (dropPos == null)
             return;
 
-        removeCard(card.id);
-        props.insertCard(card, dropPos.listIndex, dropPos.cardIndex);    
+        const newCards = cards.filter((card) => card.id != moveCard.id);
+        props.list.cards = newCards;
+        setCards(newCards);
+
+        props.insertCard(moveCard, dropPos.listIndex, dropPos.cardIndex);    
     }
 
     type Nullable<T> = T | null;
@@ -100,7 +105,7 @@ export default function List(props: {list:ListType,
             dropIndex = dropIndex - 1;
 
         if (dragIndex != dropIndex)
-            props.orderList(dragIndex, dropIndex); 
+            props.moveList(dragIndex, dropIndex); 
     }
     
     return (
@@ -109,15 +114,15 @@ export default function List(props: {list:ListType,
             onDragOver={e => e.preventDefault()}
         >
             <input value={title} className="title"  onChange={e => {
-                setTitle(e.target.value);
-                props.list.title = e.target.value;
+                props.updateList({id:props.list.id, title: e.target.value, cards: props.list.cards});
             }} />
             <button className="remove" onClick={()=>props.removeList(props.list.id)}>-</button>
             <br/>
-            { cards.map((item) => <Card 
-                key={item.id} 
-                card={item} 
+            { cards.map((card) => <Card 
+                key={card.id} 
+                card={card} 
                 removeCard={removeCard}
+                updateCard={updateCard}
                 moveCard={moveCard}
             />) }
             <br/>

@@ -30,12 +30,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-    fsPromises.writeFileSync(getJsonPath(), JSON.stringify(await request.json()));
+
+    const json = await request.text();
+    fsPromises.writeFileSync(getJsonPath(), json);
 
     console.log('POST')
     if (writer) {
         const encoder = new TextEncoder();
-        writer.write(encoder.encode('data: reload\n\n'));
+        writer.write(encoder.encode(`data: ${json}\n\n`));
     }
     return new NextResponse('ok')
 }
