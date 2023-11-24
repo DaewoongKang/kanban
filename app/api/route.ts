@@ -32,12 +32,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-
     const json = await request.text();
     fsPromises.writeFileSync(getJsonPath(), json);
 
     let data = encoder.encode(`data: ${json}\n\n`);
-
     for (let i = 0; i < sse.length; i++) {
         const writer = sse[i];
         writer.ready.then(() => {
